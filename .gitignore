@@ -1,0 +1,14 @@
+# Configuração local
+.env
+.env.*
+!.env.example
+
+# Java / Maven
+**/target/
+
+# macOS
+.DS_Store
+
+# IDEs
+.idea/
+*.iml
