@@ -1,0 +1,8 @@
+openapi: 3.0.3
+info:
+  title: FinanceHub API
+  version: 0.1.0
+  description: Contrato inicial, ainda sem endpoints implementados.
+servers:
+  - url: /api/v1
+paths: {}

@@ -1,35 +1,23 @@
-name: financehub
-
+# Ambiente inicial: somente MySQL. Serviços PHP/Java serão adicionados futuramente.
 services:
   mysql:
     image: mysql:8.4
     restart: unless-stopped
-
     environment:
-      MYSQL_DATABASE: ${DB_NAME:?Defina DB_NAME}
-      MYSQL_USER: ${DB_USERNAME:?Defina DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD}
-
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?defina MYSQL_DATABASE em .env}
+      MYSQL_USER: ${MYSQL_USER:?defina MYSQL_USER em .env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?defina MYSQL_PASSWORD em .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?defina MYSQL_ROOT_PASSWORD em .env}
     ports:
-      - "127.0.0.1:${DB_PORT:-3307}:3306"
-
+      - "${MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-
+      - ./infra/mysql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test:
-        - CMD-SHELL
-        - >-
-          mysql -h 127.0.0.1
-          -u"$${MYSQL_USER}"
-          -p"$${MYSQL_PASSWORD}"
-          "$${MYSQL_DATABASE}"
-          -e 'SELECT 1;'
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 30s
 
 volumes:
   mysql_data:
