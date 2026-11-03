@@ -30,7 +30,7 @@ public class Usuario {
     }
 
     public ArrayList<Lancamento> getLancementos() {
-        return lancementos;
+        return new ArrayList<>(this.lancementos);
     }
 
     public void setNome(String nome) {
@@ -47,5 +47,5 @@ public class Usuario {
         }
         this.lancementos.add(lancamento);
     }
-    
+
 }

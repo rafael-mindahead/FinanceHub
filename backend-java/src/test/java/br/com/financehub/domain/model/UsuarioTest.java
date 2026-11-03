@@ -70,17 +70,24 @@ public class UsuarioTest {
 
     @Test
     public void testarEncapsulamentoLista() {
-
         Usuario usuario = new Usuario(
             1, "Rafael", "rafael@email.com"
         );
 
-        ArrayList<Lancamento> lista = usuario.getLancementos();
+        Receita receita = new Receita(
+            1, "Salario",
+            new BigDecimal("2500.00"),
+            LocalDate.now()
+        );
 
+        usuario.adicionarLancamento(receita);
+
+        ArrayList<Lancamento> lista = usuario.getLancementos();
         lista.clear();
 
-        assertTrue(usuario.getLancementos().isEmpty());
+        assertEquals(1, usuario.getLancementos().size());
     }
+
 
     @Test
     public void testarLancamentoNulo() {
