@@ -5,6 +5,7 @@
 
 # Java / Maven
 **/target/
+**/dependency-reduced-pom.xml
 *.class
 *.log
 
@@ -22,6 +23,7 @@
 
 # Editors / OS
 .DS_Store
+.DS_STORE
 .idea/
 .vscode/
 *.iml
