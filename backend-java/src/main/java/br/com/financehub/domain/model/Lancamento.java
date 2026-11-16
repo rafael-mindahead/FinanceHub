@@ -1,24 +1,41 @@
 package br.com.financehub.domain.model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 
+/**
+ * Classe abstrata que representa um lançamento financeiro (Receita ou Despesa).
+ */
 public abstract class Lancamento {
-    
+
     private Long id;
     private String descricao;
     private BigDecimal valor;
     private LocalDate data;
+    private Categoria categoria;
+    private Long usuarioId;
 
-    public Lancamento(Long id, String descricao, BigDecimal valor, LocalDate data){
+    public Lancamento(Long id, String descricao, BigDecimal valor, LocalDate data) {
+        this(id, descricao, valor, data, null, 1L);
+    }
+
+    public Lancamento(Long id, String descricao, BigDecimal valor, LocalDate data, Categoria categoria, Long usuarioId) {
         this.id = id;
         this.descricao = descricao;
         this.valor = valor;
         this.data = data;
+        this.categoria = categoria;
+        this.usuarioId = usuarioId;
     }
+
     public abstract BigDecimal calcularImpacto();
 
-    public String getResumo(){
+    public abstract String getTipo();
+
+    public abstract boolean isReceita();
+
+    public String getResumo() {
         return this.descricao + " - R$ " + this.valor;
     }
 
@@ -26,16 +43,63 @@ public abstract class Lancamento {
         return this.id;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getDescricao() {
         return this.descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        if (descricao == null || descricao.isBlank()) {
+            throw new IllegalArgumentException("A descricao nao pode ser vazia");
+        }
+        this.descricao = descricao.trim();
     }
 
     public BigDecimal getValor() {
         return this.valor;
     }
 
+    public void setValor(BigDecimal valor) {
+        if (valor == null || valor.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("O valor deve ser maior que zero");
+        }
+        this.valor = valor;
+    }
+
+    public long getValorCentavos() {
+        if (this.valor == null) {
+            return 0L;
+        }
+        return this.valor.movePointRight(2).setScale(0, RoundingMode.HALF_UP).longValueExact();
+    }
+
     public LocalDate getData() {
         return this.data;
     }
-    
+
+    public void setData(LocalDate data) {
+        if (data == null) {
+            throw new IllegalArgumentException("A data nao pode ser nula");
+        }
+        this.data = data;
+    }
+
+    public Categoria getCategoria() {
+        return this.categoria;
+    }
+
+    public void setCategoria(Categoria categoria) {
+        this.categoria = categoria;
+    }
+
+    public Long getUsuarioId() {
+        return this.usuarioId;
+    }
+
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
+    }
 }
