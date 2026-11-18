@@ -75,6 +75,7 @@ public class ImportadorArquivoService {
         while ((linha = reader.readLine()) != null) {
             numeroLinha++;
             String linhaLimpa = linha.trim();
+            if (numeroLinha == 1 && linhaLimpa.startsWith("\uFEFF")) linhaLimpa = linhaLimpa.substring(1).trim();
 
             if (linhaLimpa.isEmpty() || linhaLimpa.startsWith("#")) {
                 continue;
@@ -100,21 +101,18 @@ public class ImportadorArquivoService {
         int numeroLinha,
         GerenciadorCategorias gerenciadorCategorias
     ) throws FinanceHubException {
-        String separador = linha.contains(";") ? ";" : ",";
-        String[] partes = linha.split(separador);
-
-        if (partes.length < 4) {
-            throw new FinanceHubException(
-                "LINHA_INVALIDA",
-                "Linha " + numeroLinha + " invalida. Esperado: TIPO;DESCRICAO;VALOR;DATA[;CATEGORIA]"
-            );
+        List<String> partes = separarCamposCsv(linha, numeroLinha);
+        if (partes.size() < 4 || partes.size() > 5) {
+            throw new FinanceHubException("LINHA_INVALIDA",
+                "Linha " + numeroLinha + " invalida. Esperado: TIPO;DESCRICAO;VALOR;DATA[;CATEGORIA]");
         }
 
-        String tipo = partes[0].trim().toUpperCase();
-        String descricao = partes[1].trim();
-        String valorTexto = partes[2].trim();
-        String dataTexto = partes[3].trim();
-        String nomeCategoria = partes.length >= 5 ? partes[4].trim() : "Geral";
+        String tipo = partes.get(0).trim().toUpperCase();
+        String descricao = partes.get(1).trim();
+        String valorTexto = partes.get(2).trim();
+        String dataTexto = partes.get(3).trim();
+        String nomeCategoria = partes.size() == 5 && !partes.get(4).isBlank()
+            ? partes.get(4).trim() : "Geral";
 
         BigDecimal valor;
         try {
@@ -131,7 +129,6 @@ public class ImportadorArquivoService {
         }
 
         Categoria categoria = resolverOuCriarCategoria(nomeCategoria, gerenciadorCategorias);
-
         Lancamento lancamento;
         if ("RECEITA".equals(tipo)) {
             lancamento = new Receita(null, descricao, valor, data, categoria, 1L);
@@ -146,6 +143,50 @@ public class ImportadorArquivoService {
             categoria.adicionarLancamento(lancamento);
         }
         return lancamento;
+    }
+
+    /**
+     * Suporta campos entre aspas, delimitadores dentro de campos e aspas escapadas ("").
+     * O delimitador pode ser ponto e virgula ou virgula.
+     */
+    private List<String> separarCamposCsv(String linha, int numeroLinha) throws FinanceHubException {
+        boolean aspas = false;
+        char delimitador = ';';
+        for (int i = 0; i < linha.length(); i++) {
+            char c = linha.charAt(i);
+            if (c == '"') {
+                if (aspas && i + 1 < linha.length() && linha.charAt(i + 1) == '"') i++;
+                else aspas = !aspas;
+            } else if (!aspas && (c == ';' || c == ',')) {
+                delimitador = c;
+                break;
+            }
+        }
+
+        List<String> campos = new ArrayList<>();
+        StringBuilder campo = new StringBuilder();
+        aspas = false;
+        for (int i = 0; i < linha.length(); i++) {
+            char c = linha.charAt(i);
+            if (c == '"') {
+                if (aspas && i + 1 < linha.length() && linha.charAt(i + 1) == '"') {
+                    campo.append('"');
+                    i++;
+                } else {
+                    aspas = !aspas;
+                }
+            } else if (c == delimitador && !aspas) {
+                campos.add(campo.toString());
+                campo.setLength(0);
+            } else {
+                campo.append(c);
+            }
+        }
+        if (aspas) {
+            throw new FinanceHubException("CSV_MALFORMADO", "Aspas nao fechadas na linha " + numeroLinha + ".");
+        }
+        campos.add(campo.toString());
+        return campos;
     }
 
     private Categoria resolverOuCriarCategoria(String nomeCategoria, GerenciadorCategorias gerenciadorCategorias) {
