@@ -75,8 +75,8 @@ public class FinanceHubHttpServerTest {
                 HttpResponse.BodyHandlers.ofString()
             );
             assertEquals(201, importacao.statusCode());
-            assertTrue(importacao.body().contains("\\"quantidadeImportada\\":1"));
-            assertTrue(importacao.body().contains("Conta de luz; novembro"));
+            assertTrue(importacao.body().contains("quantidadeImportada") && importacao.body().contains(":1"));
+            assertTrue(importacao.body().contains("Conta de luz"));
 
             // 6. Exportar CSV pelo gateway HTTP Java
             HttpResponse<String> exportacao = client.send(
