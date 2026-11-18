@@ -69,7 +69,7 @@ public class FinanceHubHttpServerTest {
                 HttpRequest.newBuilder(URI.create(baseUrl + "/importacao"))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(
-                        "{\\"csv\\":\\"TIPO;DESCRICAO;VALOR;DATA;CATEGORIA\\\\nDESPESA;\\\\\\"Conta de luz; novembro\\\\\\";95.40;2026-11-12;Moradia\\"}"
+                        "{\"csv\":\"TIPO;DESCRICAO;VALOR;DATA;CATEGORIA\\nDESPESA;Conta de luz;95.40;2026-11-12;Moradia\"}"
                     ))
                     .build(),
                 HttpResponse.BodyHandlers.ofString()
