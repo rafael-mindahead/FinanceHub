@@ -81,8 +81,9 @@ public class ImportadorArquivoService {
                 continue;
             }
 
-            // Ignora linha de cabeçalho caso exista
-            if (numeroLinha == 1 && linhaLimpa.toUpperCase().startsWith("TIPO")) {
+            // Ignora cabeçalho na primeira linha útil, inclusive após BOM/linhas vazias.
+            if (importados.isEmpty()
+                && linhaLimpa.split("[;,]", 2)[0].replace(String.valueOf((char) 34), "").trim().equalsIgnoreCase("TIPO")) {
                 continue;
             }
 
@@ -215,6 +216,16 @@ public class ImportadorArquivoService {
         return nova;
     }
 
+    private String escaparCampoCsv(String valor) {
+        if (valor == null) return "";
+        if (valor.indexOf(';') >= 0 || valor.indexOf(',') >= 0 || valor.indexOf((char) 34) >= 0
+            || valor.indexOf((char) 10) >= 0 || valor.indexOf((char) 13) >= 0) {
+            String aspas = String.valueOf((char) 34);
+            return aspas + valor.replace(aspas, aspas + aspas) + aspas;
+        }
+        return valor;
+    }
+
     public void exportarParaArquivo(Path caminhoArquivo, List<Lancamento> lancamentos) throws FinanceHubException {
         if (caminhoArquivo == null) {
             throw new FinanceHubException("CAMINHO_INVALIDO", "O caminho do arquivo para exportacao nao pode ser nulo.");
@@ -227,13 +238,12 @@ public class ImportadorArquivoService {
                     String nomeCat = (l.getCategoria() != null && l.getCategoria().getNome() != null)
                         ? l.getCategoria().getNome()
                         : "Geral";
-                    writer.write(String.format(
-                        "%s;%s;%s;%s;%s",
-                        l.getTipo(),
-                        l.getDescricao(),
-                        l.getValor().toPlainString(),
-                        l.getData().toString(),
-                        nomeCat
+                    writer.write(String.join(";",
+                        escaparCampoCsv(l.getTipo()),
+                        escaparCampoCsv(l.getDescricao()),
+                        escaparCampoCsv(l.getValor().toPlainString()),
+                        escaparCampoCsv(l.getData().toString()),
+                        escaparCampoCsv(nomeCat)
                     ));
                     writer.newLine();
                 }
