@@ -63,6 +63,29 @@ public class FinanceHubHttpServerTest {
             );
             assertEquals(200, relatorio.statusCode());
             assertTrue(relatorio.body().contains("saldoTotalCentavos"));
+
+            // 5. Importar CSV pelo gateway HTTP Java
+            HttpResponse<String> importacao = client.send(
+                HttpRequest.newBuilder(URI.create(baseUrl + "/importacao"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(
+                        "{\\"csv\\":\\"TIPO;DESCRICAO;VALOR;DATA;CATEGORIA\\\\nDESPESA;\\\\\\"Conta de luz; novembro\\\\\\";95.40;2026-11-12;Moradia\\"}"
+                    ))
+                    .build(),
+                HttpResponse.BodyHandlers.ofString()
+            );
+            assertEquals(201, importacao.statusCode());
+            assertTrue(importacao.body().contains("\\"quantidadeImportada\\":1"));
+            assertTrue(importacao.body().contains("Conta de luz; novembro"));
+
+            // 6. Exportar CSV pelo gateway HTTP Java
+            HttpResponse<String> exportacao = client.send(
+                HttpRequest.newBuilder(URI.create(baseUrl + "/exportacao")).GET().build(),
+                HttpResponse.BodyHandlers.ofString()
+            );
+            assertEquals(200, exportacao.statusCode());
+            assertTrue(exportacao.headers().firstValue("Content-Type").orElse("").contains("text/csv"));
+            assertTrue(exportacao.body().contains("TIPO;DESCRICAO;VALOR;DATA;CATEGORIA"));
         } finally {
             server.parar();
         }
