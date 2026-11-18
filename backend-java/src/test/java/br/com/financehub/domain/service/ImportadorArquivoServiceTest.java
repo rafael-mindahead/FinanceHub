@@ -56,6 +56,46 @@ public class ImportadorArquivoServiceTest {
     }
 
     @Test
+    public void testarCsvComAspasSeparadoresEUtf8() throws FinanceHubException {
+        ImportadorArquivoService importador = new ImportadorArquivoService();
+        GerenciadorLancamentos lancamentos = new GerenciadorLancamentos();
+        GerenciadorCategorias categorias = new GerenciadorCategorias();
+
+        String csv = "\uFEFFTIPO;DESCRICAO;VALOR;DATA;CATEGORIA\n"
+            + "RECEITA;\"Projeto; especial, etapa 1\";1250.75;2026-11-10;\"Servicos; consultoria\"";
+
+        ArrayList<Lancamento> importados = importador.importarDeConteudo(csv, lancamentos, categorias);
+
+        assertEquals(1, importados.size());
+        assertEquals("Projeto; especial, etapa 1", importados.get(0).getDescricao());
+        assertEquals("Servicos; consultoria", importados.get(0).getCategoria().getNome());
+    }
+
+    @Test
+    public void testarExportacaoEscapaCamposComDelimitadores(@TempDir Path tempDir) throws FinanceHubException {
+        ImportadorArquivoService importador = new ImportadorArquivoService();
+        GerenciadorLancamentos origem = new GerenciadorLancamentos();
+        GerenciadorCategorias categoriasOrigem = new GerenciadorCategorias();
+
+        importador.importarDeConteudo(
+            "RECEITA;\"Consultoria; especial\";500.00;2026-11-11;\"Servicos; gerais\"",
+            origem, categoriasOrigem
+        );
+
+        Path arquivo = tempDir.resolve("exportacao.csv");
+        importador.exportarParaArquivo(arquivo, origem.listar());
+
+        GerenciadorLancamentos destino = new GerenciadorLancamentos();
+        ArrayList<Lancamento> reimportados = importador.importarDeArquivo(
+            arquivo, destino, new GerenciadorCategorias()
+        );
+
+        assertEquals(1, reimportados.size());
+        assertEquals("Consultoria; especial", reimportados.get(0).getDescricao());
+        assertEquals("500.00", reimportados.get(0).getValor().toPlainString());
+    }
+
+    @Test
     public void testarErroEmLinhaMalformada() {
         ImportadorArquivoService importador = new ImportadorArquivoService();
         GerenciadorLancamentos lancamentos = new GerenciadorLancamentos();
