@@ -61,7 +61,7 @@ public class ImportadorArquivoServiceTest {
         GerenciadorLancamentos lancamentos = new GerenciadorLancamentos();
         GerenciadorCategorias categorias = new GerenciadorCategorias();
 
-        String csv = "\uFEFFTIPO;DESCRICAO;VALOR;DATA;CATEGORIA\\n"
+        String csv = "\uFEFFTIPO;DESCRICAO;VALOR;DATA;CATEGORIA\n"
             + "RECEITA;\"Projeto; especial, etapa 1\";1250.75;2026-11-10;\"Servicos; consultoria\"";
 
         ArrayList<Lancamento> importados = importador.importarDeConteudo(csv, lancamentos, categorias);
